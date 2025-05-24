@@ -30,7 +30,7 @@ public:
     void Simulate(float dt);
     void ShutdownPhysX();
 
-private:
+public:
     PxDefaultAllocator      gAllocator;
     PxDefaultErrorCallback  gErrorCallback;
     PxFoundation* gFoundation = nullptr;
