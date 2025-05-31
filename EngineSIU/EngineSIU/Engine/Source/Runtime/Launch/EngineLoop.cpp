@@ -16,6 +16,7 @@
 #include "Renderer/TileLightCullingPass.h"
 
 #include "SoundManager.h"
+#include "Lua/LuaScriptManager.h"
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 
