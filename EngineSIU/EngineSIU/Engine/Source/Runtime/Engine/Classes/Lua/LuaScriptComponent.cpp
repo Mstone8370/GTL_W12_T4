@@ -9,6 +9,11 @@ ULuaScriptComponent::ULuaScriptComponent()
 {
 }
 
+ULuaScriptComponent::~ULuaScriptComponent()
+{
+    FLuaScriptManager::Get().UnRigisterActiveLuaComponent(this);
+}
+
 UObject* ULuaScriptComponent::Duplicate(UObject* InOuter)
 {
     ULuaScriptComponent* NewComponent = Cast<ULuaScriptComponent>(Super::Duplicate(InOuter));
