@@ -187,7 +187,7 @@ void FEngineLoop::Tick()
         {
             GPUTimingManager.EndFrame();        // End GPU frame timing
         }
-
+        FSoundManager::GetInstance().Update();
         GraphicDevice.SwapBuffer();
         do
         {
@@ -196,7 +196,6 @@ void FEngineLoop::Tick()
             ElapsedTime = (static_cast<double>(EndTime.QuadPart - StartTime.QuadPart) * 1000.f / static_cast<double>(Frequency.QuadPart));
         } while (ElapsedTime < TargetFrameTime);
     }
-    FSoundManager::GetInstance().Update();
 }
 
 void FEngineLoop::GetClientSize(uint32& OutWidth, uint32& OutHeight) const
