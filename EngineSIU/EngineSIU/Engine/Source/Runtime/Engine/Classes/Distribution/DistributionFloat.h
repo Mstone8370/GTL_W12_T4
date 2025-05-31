@@ -14,7 +14,6 @@ struct FDistributionFloat
     //float MinValue;
     //float MaxValue;
 
-    void GetOutRange(float& MinOut, float& MaxOut);
     float GetValue();
 
     friend FArchive& operator<<(FArchive& Ar, FDistributionFloat& DF)
