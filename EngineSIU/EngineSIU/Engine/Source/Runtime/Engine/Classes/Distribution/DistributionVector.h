@@ -39,6 +39,8 @@ public:
         return RandomVector;
     }
 
+    void GetOutRange(FVector& OutMin, FVector& OutMax) const;
+
     friend FArchive& operator<<(FArchive& Ar, FDistributionVector& DV)
     {
         Ar << DV.MinValue << DV.MaxValue;
