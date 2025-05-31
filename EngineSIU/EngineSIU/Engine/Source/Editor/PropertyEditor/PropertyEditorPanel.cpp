@@ -46,6 +46,7 @@
 #include "Particles/ParticleEmitter.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Components/SocketComponent.h"
 
 PropertyEditorPanel::PropertyEditorPanel()
 {
@@ -123,7 +124,11 @@ void PropertyEditorPanel::Render()
             }
         }
     }
-    
+    if (USocketComponent* SocketComponent = GetTargetComponent<USocketComponent>(SelectedActor, SelectedComponent))
+    {
+        RenderForSocketComponent(SocketComponent);
+    }
+
     if (UAmbientLightComponent* LightComponent = GetTargetComponent<UAmbientLightComponent>(SelectedActor, SelectedComponent))
     {
         RenderForAmbientLightComponent(LightComponent);
@@ -1658,4 +1663,38 @@ void PropertyEditorPanel::OnResize(HWND hWnd)
     GetClientRect(hWnd, &ClientRect);
     Width = ClientRect.right - ClientRect.left;
     Height = ClientRect.bottom - ClientRect.top;
+}
+
+void PropertyEditorPanel::RenderForSocketComponent(USocketComponent* SocketComponent) const
+{
+    FReferenceSkeleton& RefSkel = SocketComponent->GetRefSkeletal();
+    const TArray<FMeshBoneInfo>& BoneInfos = RefSkel.RawRefBoneInfo;
+
+    FName& Label = SocketComponent->Socket;
+
+    if (ImGui::BeginCombo("##SocketBone", *Label.ToString(), ImGuiComboFlags_None))
+    {
+        for (const FMeshBoneInfo& BoneInfo : BoneInfos)
+        {
+            if (ImGui::Selectable(GetData(BoneInfo.Name.ToString()), false))
+            {
+                Label = BoneInfo.Name;
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    // FString ParentSkeletalName = SocketComponent->SkeletalMeshComponent ? SocketComponent->SkeletalMeshComponent->GetName() : FString("Parent");
+    //         
+    // if (ImGui::BeginCombo("##Parent", *ParentSkeletalName, ImGuiComboFlags_None))
+    // {
+    //     for (auto It : TObjectRange<USkeletalMeshComponent>())
+    //     {
+    //         if (ImGui::Selectable(GetData(It->GetName()), false))
+    //         {
+    //             SocketComponent->SkeletalMeshComponent = It;
+    //         }
+    //     }
+    //     ImGui::EndCombo();
+    // }
 }
