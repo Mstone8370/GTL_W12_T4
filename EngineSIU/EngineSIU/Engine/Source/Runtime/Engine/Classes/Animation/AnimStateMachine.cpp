@@ -41,7 +41,7 @@ void UAnimStateMachine::ProcessState()
     if (OwningAnimInstance)
     {
         UAnimSequence* NewAnim = Cast<UAnimSequence>(UAssetManager::Get().GetAnimation(StateName));
-        OwningAnimInstance->SetAnimation(NewAnim, Blend, false, false);
+        OwningAnimInstance->SetAnimation(NewAnim, Blend, true, false);
     }
 }
 

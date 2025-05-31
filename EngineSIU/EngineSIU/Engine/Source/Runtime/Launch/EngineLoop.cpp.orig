@@ -188,10 +188,13 @@ void FEngineLoop::Tick()
         {
             GPUTimingManager.EndFrame();        // End GPU frame timing
         }
+<<<<<<< HEAD
         FSoundManager::GetInstance().Update();
+=======
 
         FLuaScriptManager::Get().HotReloadLuaScript();
 
+>>>>>>> origin/Refactor/Lua
         GraphicDevice.SwapBuffer();
         do
         {

@@ -1,0 +1,24 @@
+# Blender 4.4.0 MTL File: 'None'
+# www.blender.org
+
+newmtl Material
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/Jungle/Desktop/Blender/Nintendo Switch - Super Mario Party - Bowser Jr/Bowser Jr/Textures/pc56_body_alb.png
+map_Ns C:/Users/Jungle/Desktop/Blender/Nintendo Switch - Super Mario Party - Bowser Jr/Bowser Jr/Textures/pc56_body_rgh.png
+map_refl C:/Users/Jungle/Desktop/Blender/Nintendo Switch - Super Mario Party - Bowser Jr/Bowser Jr/Textures/pc56_eye_mtl.png
+
+newmtl 매테리얼
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd C:/Users/Jungle/Desktop/Blender/Nintendo Switch - Super Mario Party - Bowser Jr/Bowser Jr/Textures/pc56_eye_gold_alb.png
+map_Ns C:/Users/Jungle/Desktop/Blender/Nintendo Switch - Super Mario Party - Bowser Jr/Bowser Jr/Textures/pc56_eye_rgh.png
+map_refl C:/Users/Jungle/Desktop/Blender/Nintendo Switch - Super Mario Party - Bowser Jr/Bowser Jr/Textures/pc56_eye_mtl.png
