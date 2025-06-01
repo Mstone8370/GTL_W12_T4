@@ -11,6 +11,8 @@ UObject* APlayer::Duplicate(UObject* InOuter)
 
     NewActor->Socket = Socket;
     NewActor->CameraComponent = NewActor->GetComponentByClass<UCameraComponent>();
+    NewActor->CameraComponent->SetupAttachment(NewActor->RootComponent);
+    NewActor->CameraComponent->SetRelativeLocation(FVector(2,0,0));
     
     return NewActor;
 }
@@ -20,23 +22,19 @@ void APlayer::PostSpawnInitialize()
     Super::PostSpawnInitialize();
     
     RootComponent = AddComponent<USceneComponent>();
+    CameraComponent = AddComponent<UCameraComponent>();
 }
 
 void APlayer::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (SkeletalMeshComponent)
-    {
-        const FTransform SocketTransform = SkeletalMeshComponent->GetSocketTransform(Socket);
-        SetActorRotation(SocketTransform.GetRotation().Rotator());
-        SetActorLocation(SocketTransform.GetTranslation());
-    }
-
-    if (CameraComponent)
-    {
-        CameraComponent->FollowPlayer(PlayerIndex);
-    }
+    // if (SkeletalMeshComponent)
+    // {
+    //     const FTransform SocketTransform = SkeletalMeshComponent->GetSocketTransform(Socket);
+    //     SetActorRotation(SocketTransform.GetRotation().Rotator());
+    //     SetActorLocation(SocketTransform.GetTranslation());
+    // }
 }
 
 void APlayer::SetupInputComponent(UInputComponent* PlayerInputComponent)
