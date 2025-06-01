@@ -83,6 +83,7 @@ void ULuaScriptComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     {
         ActivateFunction("EndPlay", EndPlayReason);
     }
+    FLuaScriptManager::Get().UnRigisterActiveLuaComponent(this);
 }
 
 void ULuaScriptComponent::DestroyComponent(bool bPromoteChildren)
