@@ -47,7 +47,7 @@
 
 PropertyEditorPanel::PropertyEditorPanel()
 {
-    SetSupportedWorldTypes(EWorldTypeBitFlag::Editor| EWorldTypeBitFlag::PIE);
+    SetSupportedWorldTypes(EWorldTypeBitFlag::Editor | EWorldTypeBitFlag::PIE);
 }
 
 void PropertyEditorPanel::Render()
@@ -57,7 +57,7 @@ void PropertyEditorPanel::Render()
     {
         return;
     }
-    
+
     /* Pre Setup */
     float PanelWidth = (Width) * 0.2f - 5.0f;
     float PanelHeight = (Height)-((Height) * 0.3f + 10.0f) - 32.0f;
@@ -86,7 +86,7 @@ void PropertyEditorPanel::Render()
         TargetComponent = SelectedComponent;
     }
     else if (SelectedActor != nullptr)
-    {        
+    {
         TargetComponent = SelectedActor->GetRootComponent();
     }
 
@@ -121,7 +121,7 @@ void PropertyEditorPanel::Render()
             }
         }
     }
-    
+
     if (UAmbientLightComponent* LightComponent = GetTargetComponent<UAmbientLightComponent>(SelectedActor, SelectedComponent))
     {
         RenderForAmbientLightComponent(LightComponent);
@@ -165,7 +165,7 @@ void PropertyEditorPanel::Render()
     {
         RenderForCameraComponent(CameraComponent);
     }
-  
+
     if (UShapeComponent* ShapeComponent = GetTargetComponent<UShapeComponent>(SelectedActor, SelectedComponent))
     {
         RenderForShapeComponent(ShapeComponent);
@@ -317,16 +317,40 @@ void PropertyEditorPanel::RenderForSceneComponent(USceneComponent* SceneComponen
         {
             Player->AddCoordMode();
         }
-         
+
         ImGui::TreePop();
     }
 
+
+    if (ImGui::TreeNodeEx("Attach", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        static char SocketNameBuffer[64] = "";
+
+        // SceneComponent의 현재 AttachSocketName → 문자열 변환 (한 번만)
+        {
+/*            FName AttachSocketName = SceneComponent->GetAttachSocketName();
+            FString SocketNameStr = AttachSocketName.ToString();
+            FCStringAnsi::Strncpy(SocketNameBuffer, GetData(SocketNameStr), sizeof(SocketNameBuffer));
+        */}
+
+        // ImGui 입력
+        ImGui::InputText("SocketName", SocketNameBuffer, sizeof(SocketNameBuffer));
+
+        // Attach 버튼
+        if (ImGui::Button("Attach", ImVec2(ImGui::GetWindowContentRegionMax().x * 0.5f, 28)))
+        {
+            FName NewSocketName = FName(GetData(SocketNameBuffer));
+            SceneComponent->SetAttachSocketName(NewSocketName);
+        }
+
+        ImGui::TreePop();
+    }
     ImGui::PopStyleColor();
 }
 
 void PropertyEditorPanel::RenderForCameraComponent(UCameraComponent* InCameraComponent)
 {
-    
+
 }
 
 void PropertyEditorPanel::RenderForPlayerActor(APlayer* InPlayerActor)
@@ -346,7 +370,7 @@ void PropertyEditorPanel::RenderForActor(AActor* SelectedActor, USceneComponent*
         Engine->SelectActor(NewActor);
         Engine->DeselectComponent(Engine->GetSelectedComponent());
     }
-    
+
     FString BasePath = FString(L"LuaScripts\\");
 
     if (ImGui::TreeNodeEx("Component", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen)) // 트리 노드 생성
@@ -393,7 +417,7 @@ void PropertyEditorPanel::RenderForStaticMesh(UStaticMeshComponent* StaticMeshCo
                 PreviewName = RenderData->DisplayName;
             }
         }
-        
+
         const TMap<FName, FAssetInfo> Assets = UAssetManager::Get().GetAssetRegistry();
 
         if (ImGui::BeginCombo("##StaticMesh", GetData(PreviewName), ImGuiComboFlags_None))
@@ -404,7 +428,7 @@ void PropertyEditorPanel::RenderForStaticMesh(UStaticMeshComponent* StaticMeshCo
                 {
                     continue;
                 }
-                
+
                 if (ImGui::Selectable(GetData(Asset.Value.AssetName.ToString()), false))
                 {
                     FString MeshName = Asset.Value.PackagePath.ToString() + "/" + Asset.Value.AssetName.ToString();
@@ -433,6 +457,77 @@ void PropertyEditorPanel::RenderForSkeletalMesh(USkeletalMeshComponent* Skeletal
     ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
     if (ImGui::TreeNodeEx("Skeletal Mesh", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen)) // 트리 노드 생성
     {
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+        if (ImGui::TreeNodeEx("Sockets", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            // 1. 소켓 이름 입력
+            static char NewSocketNameBuf[128] = "";
+            ImGui::Text("Socket Name:");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(200.0f);
+            ImGui::InputText("##SocketName", NewSocketNameBuf, IM_ARRAYSIZE(NewSocketNameBuf));
+
+            // 3. 부모 본 이름 입력
+            static char ParentBoneNameBuf[128] = "";
+            ImGui::Text("Parent Bone:");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(200.0f);
+            ImGui::InputText("##ParentBoneName", ParentBoneNameBuf, IM_ARRAYSIZE(ParentBoneNameBuf));
+
+            // 4. 상대 트랜스폼(위치/회전/스케일) 입력
+            static float RelLoc[3] = { 0.0f, 0.0f, 0.0f };
+            static float RelRot[3] = { 0.0f, 0.0f, 0.0f }; // Euler(Pitch, Yaw, Roll)
+            static float RelScale[3] = { 1.0f, 1.0f, 1.0f };
+
+            ImGui::Separator();
+            ImGui::Text("Relative Location:");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(150.0f);
+            ImGui::DragFloat3("##RelLoc", RelLoc, 0.1f);
+
+            ImGui::Text("Relative Rotation (Deg):");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(150.0f);
+            ImGui::DragFloat3("##RelRot", RelRot, 1.0f);
+
+            ImGui::Text("Relative Scale:");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(150.0f);
+            ImGui::DragFloat3("##RelScale", RelScale, 0.1f);
+
+            ImGui::Separator();
+
+            // 5. “Create & Attach” 버튼: 새 컴포넌트를 생성하고, 소켓에 부착
+            if (ImGui::Button("Create Socket"))
+            {
+                FName SocketFName = FName(GetData(FString(NewSocketNameBuf)));
+                FName ParentBoneFName = FName(GetData(FString(ParentBoneNameBuf)));
+                //ToDo. Skeletal bone 이름 보이도록, Socket리스트들 보이도록. 삭제 버튼 추가
+
+                // 상대 트랜스폼 생성 (FVector, FRotator, FVector)
+                FVector  Loc = FVector(RelLoc[0], RelLoc[1], RelLoc[2]);
+                FRotator Rot = FRotator(RelRot[0], RelRot[1], RelRot[2]);
+                FVector  Scale = FVector(RelScale[0], RelScale[1], RelScale[2]);
+
+                FTransform RelativeTfm(Rot, Loc, Scale);
+
+                UEditorEngine* EditorEngine = Cast<UEditorEngine>(GEngine);
+                if (EditorEngine)
+                {
+                    AActor* SelectedActor = EditorEngine->GetSelectedActor();
+                    if (SelectedActor)
+                    {
+                        SkeletalMeshComp->AddSocket(SocketFName, ParentBoneFName, RelativeTfm);
+                    }
+                }
+
+            }
+
+            ImGui::TreePop();
+        }
+
+        ImGui::PopStyleColor();
+
         ImGui::Text("SkeletalMesh");
         ImGui::SameLine();
 
@@ -444,7 +539,7 @@ void PropertyEditorPanel::RenderForSkeletalMesh(USkeletalMeshComponent* Skeletal
                 SelectedSkeletalMeshName = RenderData->DisplayName;
             }
         }
-        
+
         const TMap<FName, FAssetInfo> SkeletalMeshAssets = UAssetManager::Get().GetAssetRegistry();
 
         if (ImGui::BeginCombo("##SkeletalMesh", GetData(SelectedSkeletalMeshName), ImGuiComboFlags_None))
@@ -455,7 +550,7 @@ void PropertyEditorPanel::RenderForSkeletalMesh(USkeletalMeshComponent* Skeletal
                 {
                     continue;
                 }
-                
+
                 if (ImGui::Selectable(GetData(Asset.Value.AssetName.ToString()), false))
                 {
                     FString AssetName = Asset.Value.PackagePath.ToString() + "/" + Asset.Value.AssetName.ToString();
@@ -539,7 +634,7 @@ void PropertyEditorPanel::RenderForSkeletalMesh(USkeletalMeshComponent* Skeletal
                     }
                 }
                 if (AnimInstance && AnimInstance->GetClass()->IsChildOf(SelectedClass))
-                {                    
+                {
                     UAnimStateMachine* AnimStateMachine = AnimInstance->GetStateMachine();
                     if(ImGui::Button("MoveFast"))
                     {
@@ -560,7 +655,7 @@ void PropertyEditorPanel::RenderForSkeletalMesh(USkeletalMeshComponent* Skeletal
                     {
                         AnimStateMachine->StopDance();
                     }
-                    
+
                     AnimInstance->SetAnimState(AnimStateMachine->GetState());
                 }
                 */
@@ -573,7 +668,7 @@ void PropertyEditorPanel::RenderForSkeletalMesh(USkeletalMeshComponent* Skeletal
             {
                 SelectedAnimationName = Animation->GetName();
             }
-        
+
             const TMap<FName, FAssetInfo> AnimationAssets = UAssetManager::Get().GetAssetRegistry();
 
             ImGui::Text("Anim To Play");
@@ -584,21 +679,21 @@ void PropertyEditorPanel::RenderForSkeletalMesh(USkeletalMeshComponent* Skeletal
                 {
                     SkeletalMeshComp->SetAnimation(nullptr);
                 }
-                
+
                 for (const auto& Asset : AnimationAssets)
                 {
                     if (Asset.Value.AssetType != EAssetType::Animation)
                     {
                         continue;
                     }
-                
+
                     if (ImGui::Selectable(GetData(Asset.Value.AssetName.ToString()), false))
                     {
                         FString AssetName = Asset.Value.PackagePath.ToString() + "/" + Asset.Value.AssetName.ToString();
 
                         UAnimationAsset* Animation = UAssetManager::Get().GetAnimation(FName(AssetName));
                         UAnimSequence* AnimSeq = nullptr;
-                    
+
                         if (Animation)
                         {
                             AnimSeq = Cast<UAnimSequence>(Animation);
@@ -610,7 +705,7 @@ void PropertyEditorPanel::RenderForSkeletalMesh(USkeletalMeshComponent* Skeletal
                             const bool bWasPlaying = SkeletalMeshComp->IsPlaying();
 
                             SkeletalMeshComp->SetAnimation(AnimSeq);
-                            
+
                             SkeletalMeshComp->SetLooping(bWasLooping);
                             if (bWasPlaying)
                             {
@@ -665,6 +760,17 @@ void PropertyEditorPanel::RenderForSkeletalMesh(USkeletalMeshComponent* Skeletal
     ImGui::PopStyleColor();
 }
 
+void PropertyEditorPanel::AddSocketToSkeletalMeshAsset(USkeletalMeshComponent* SkeletalMeshComp, const FName& NewSocketName, const FName& ParentBoneName, const FTransform& RelativeTransform)
+{
+
+    if (!SkeletalMeshComp || NewSocketName.ToString().IsEmpty() || ParentBoneName.ToString().IsEmpty())
+    {
+        return;
+
+    }
+    SkeletalMeshComp->AddSocket(NewSocketName, ParentBoneName, RelativeTransform);
+}
+
 void PropertyEditorPanel::RenderForPhysicsAsset(const USkeletalMeshComponent* SkeletalMeshComp) const
 {
     ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
@@ -674,7 +780,7 @@ void PropertyEditorPanel::RenderForPhysicsAsset(const USkeletalMeshComponent* Sk
         ImGui::SameLine();
 
         FString SelectedPhysicsAssetKey = FString("None");
-        
+
         USkeletalMesh* SkeletalMesh = SkeletalMeshComp->GetSkeletalMeshAsset();
         if (SkeletalMesh)
         {
@@ -721,7 +827,7 @@ void PropertyEditorPanel::RenderForPhysicsAsset(const USkeletalMeshComponent* Sk
             {
                 return;
             }
-            
+
             Engine->StartPhysicsAssetViewer(FName(SkeletalMesh->GetRenderData()->ObjectName), SelectedPhysicsAssetKey);
         }
         ImGui::TreePop();
@@ -740,7 +846,7 @@ void PropertyEditorPanel::RenderForParticleSystem(UParticleSystemComponent* Part
             if (!ParticleSystemAsset)
             {
                 ParticleSystemAsset = FObjectFactory::ConstructObject<UParticleSystem>(nullptr);
-        
+
                 FAssetInfo Info;
                 Info.AssetName = ParticleSystemAsset->GetName();
                 Info.PackagePath = TEXT("Contents/ParticleSystem");
@@ -751,7 +857,7 @@ void PropertyEditorPanel::RenderForParticleSystem(UParticleSystemComponent* Part
                 UAssetManager::Get().AddAsset(Info.GetFullPath(), ParticleSystemAsset);
                 ParticleSystemComponent->SetParticleSystem(ParticleSystemAsset);
             }
-            
+
             Engine->StartParticleViewer(ParticleSystemAsset);
         }
     }
@@ -850,7 +956,7 @@ void PropertyEditorPanel::RenderForPointLightComponent(UPointLightComponent* Poi
         FShadowCubeMapArrayRHI* pointRHI = FEngineLoop::Renderer.ShadowManager->GetPointShadowCubeMapRHI();
         const char* faceNames[] = { "+X", "-X", "+Y", "-Y", "+Z", "-Z" };
         float imageSize = 128.0f;
-        int index =  PointlightComponent->GetPointLightInfo().ShadowMapArrayIndex;
+        int index = PointlightComponent->GetPointLightInfo().ShadowMapArrayIndex;
         // CubeMap이므로 6개의 ShadowMap을 그립니다.
         for (int i = 0; i < 6; ++i)
         {
@@ -858,7 +964,7 @@ void PropertyEditorPanel::RenderForPointLightComponent(UPointLightComponent* Poi
             if (faceSRV)
             {
                 ImGui::Image(reinterpret_cast<ImTextureID>(faceSRV), ImVec2(imageSize, imageSize));
-                ImGui::SameLine(); 
+                ImGui::SameLine();
                 ImGui::Text("%s", faceNames[i]);
             }
         }
@@ -1207,7 +1313,7 @@ void PropertyEditorPanel::RenderForShapeComponent(UShapeComponent* ShapeComponen
             ImGui::TreePop();
         }
     }
-    
+
     ImGui::PopStyleColor();
 }
 
@@ -1243,9 +1349,9 @@ void PropertyEditorPanel::RenderForSpringArmComponent(USpringArmComponent* Sprin
         if (ImGui::Checkbox("UsePawnControlRotation", &UsePawnControlRotation))
             SpringArmComponent->bUsePawnControlRotation = UsePawnControlRotation;
 
-		bool UseAbsolRot = SpringArmComponent->IsUsingAbsoluteRotation();
-		if (ImGui::Checkbox("UseAbsoluteRot", &UseAbsolRot))
-			SpringArmComponent->SetUsingAbsoluteRotation(UseAbsolRot);
+        bool UseAbsolRot = SpringArmComponent->IsUsingAbsoluteRotation();
+        if (ImGui::Checkbox("UseAbsoluteRot", &UseAbsolRot))
+            SpringArmComponent->SetUsingAbsoluteRotation(UseAbsolRot);
 
         bool InheritPitch = SpringArmComponent->bInheritPitch;
         if (ImGui::Checkbox("InheritPitch", &InheritPitch))
@@ -1274,7 +1380,7 @@ void PropertyEditorPanel::RenderForSpringArmComponent(USpringArmComponent* Sprin
 
         // --- Lag speeds / limits ---
         ImGui::DragFloat("LocSpeed", &SpringArmComponent->CameraLagSpeed, 0.1f, 0.0f, 100.0f);
-        
+
         ImGui::DragFloat("RotSpeed", &SpringArmComponent->CameraRotationLagSpeed, 0.1f, 0.0f, 100.0f);
         //ImGui::NewLine();
         ImGui::DragFloat("LagMxStep", &SpringArmComponent->CameraLagMaxTimeStep, 0.005f, 0.0f, 1.0f);

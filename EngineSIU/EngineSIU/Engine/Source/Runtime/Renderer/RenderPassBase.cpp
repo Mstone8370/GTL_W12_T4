@@ -1,4 +1,4 @@
-﻿#include "RenderPassBase.h"
+#include "RenderPassBase.h"
 
 #include "Define.h"
 #include "RendererHelpers.h"

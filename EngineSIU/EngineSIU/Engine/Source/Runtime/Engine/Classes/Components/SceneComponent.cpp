@@ -1,4 +1,5 @@
 #include "Components/SceneComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 
 #include "Math/Rotator.h"
 #include "Math/JungleMath.h"
@@ -22,6 +23,7 @@ UObject* USceneComponent::Duplicate(UObject* InOuter)
     NewComponent->RelativeLocation = RelativeLocation;
     NewComponent->RelativeRotation = RelativeRotation;
     NewComponent->RelativeScale3D = RelativeScale3D;
+    NewComponent->AttachSocketName = AttachSocketName;
 
     return NewComponent;
 }
@@ -73,6 +75,7 @@ void USceneComponent::InitializeComponent()
 void USceneComponent::TickComponent(float DeltaTime)
 {
     Super::TickComponent(DeltaTime);
+    UpdateAttachment();
 }
 
 void USceneComponent::EndPhysicsTickComponent(float DeltaTime) 
@@ -203,6 +206,12 @@ void USceneComponent::AttachToComponent(USceneComponent* InParent)
     {
         InParent->AttachChildren.Add(this);
     }
+}
+
+void USceneComponent::AttachToComponent(USceneComponent* InParent, FName InSocketName)
+{
+    AttachParent = InParent;
+    AttachSocketName = InSocketName.ToString();
 }
 
 FTransform USceneComponent::GetRelativeTransform() const
@@ -350,6 +359,25 @@ void USceneComponent::DetachFromComponent(USceneComponent* Target)
     }
 
     Target->AttachChildren.Remove(this);
+}
+
+void USceneComponent::UpdateAttachment()
+{
+    if (AttachParent && !AttachSocketName.IsNone())
+    {
+        if (USkeletalMeshComponent* SkeletalParent = Cast<USkeletalMeshComponent>(AttachParent))
+        {
+            FTransform ParentSocketWorldTransform = SkeletalParent->GetSocketTransform(AttachSocketName);
+
+            SetWorldTransform(ParentSocketWorldTransform);
+        }
+        else
+        {
+            // 5. (부모가 일반 SceneComponent라면) 부모의 월드 트랜스폼으로 단순히 따라감
+            FTransform ParentWorldTransform = AttachParent->GetComponentTransform();
+            this->SetWorldTransform(ParentWorldTransform);
+        }
+    }
 }
 
 void USceneComponent::SetRelativeRotation(const FRotator& InRotation)

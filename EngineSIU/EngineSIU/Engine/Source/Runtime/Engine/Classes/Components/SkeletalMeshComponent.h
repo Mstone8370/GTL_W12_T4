@@ -20,6 +20,13 @@ enum class EAnimationMode : uint8
     AnimationSingleNode,
 };
 
+struct FSocketInfo
+{
+    FName SocketName;
+    FName BoneName;
+    FTransform LocalTransform; // 소켓의 로컬 변환
+};
+
 class USkeletalMeshComponent : public USkinnedMeshComponent
 {
     DECLARE_CLASS(USkeletalMeshComponent, USkinnedMeshComponent)
@@ -55,7 +62,7 @@ public:
     void SetSkeletalMeshAsset(USkeletalMesh* InSkeletalMeshAsset);
 
     FTransform GetSocketTransform(FName SocketName) const;
-
+    FTransform GetSocketWorldTransform(const FName& SocketName, const FSocketInfo* SocketInfo) const;
     TArray<FTransform> RefBonePoseTransforms; // 원본 BindPose에서 복사해온 에디팅을 위한 Transform
 
     void GetCurrentGlobalBoneMatrices(TArray<FMatrix>& OutBoneMatrices) const;
@@ -73,11 +80,11 @@ public:
     void Stop();
 
     void SetPlaying(bool bPlaying);
-    
+
     bool IsPlaying() const;
 
     void SetReverse(bool bIsReverse);
-    
+
     bool IsReverse() const;
 
     void SetPlayRate(float Rate);
@@ -103,9 +110,9 @@ public:
     int32 GetLoopEndFrame() const;
 
     void SetLoopEndFrame(int32 InLoopEndFrame);
-    
+
     bool bIsAnimationEnabled() const { return bPlayAnimation; }
-    
+
     virtual int CheckRayIntersection(const FVector& InRayOrigin, const FVector& InRayDirection, float& OutHitDistance) const override;
 
     const FSkeletalMeshRenderData* GetCPURenderData() const;
@@ -135,10 +142,10 @@ protected:
     bool NeedToSpawnAnimScriptInstance() const;
 
     EAnimationMode AnimationMode;
-    
+
 private:
     FPoseContext BonePoseContext;
-    
+
     USkeletalMesh* SkeletalMeshAsset;
 
     bool bPlayAnimation;
@@ -154,20 +161,26 @@ private:
     TArray<FConstraintInstance*> Constraints;
 
     void CPUSkinning(bool bForceUpdate = false);
-
+private:
+    TMap<FName, FSocketInfo> SocketMap;
+public:
+    void AddSocket(const FName& InSocketName, const FName& InBoneName, const FTransform& InLocalTransform);
+    void RemoveSocket(const FName& InSocketName);
+    const FSocketInfo* GetSocketInfo(const FName& InSocketName) const;
 public:
     UPROPERTY(EditAnywhere, FString, StateMachineFileName, = "LuaScripts/Animations/DefaultStateMachine.lua");
 
 public:
     TSubclassOf<UAnimInstance> AnimClass;
-    
+
     UAnimInstance* AnimScriptInstance;
 
     UAnimSingleNodeInstance* GetSingleNodeInstance() const;
 
     void SetAnimClass(UClass* NewClass);
-    
+
     UClass* GetAnimClass() const;
-    
+
     void SetAnimInstanceClass(class UClass* NewClass);
+
 };

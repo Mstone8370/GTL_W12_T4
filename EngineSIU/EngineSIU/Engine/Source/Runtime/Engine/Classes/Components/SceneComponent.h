@@ -38,9 +38,16 @@ public:
     const TArray<USceneComponent*>& GetAttachChildren() const { return AttachChildren; }
 
     void AttachToComponent(USceneComponent* InParent);
+    void AttachToComponent(USceneComponent* InParent, FName SocketName);
+
     void SetupAttachment(USceneComponent* InParent);
     void DetachFromComponent(USceneComponent* Target);
-    
+    FName GetAttachSocketName() const { return AttachSocketName; };
+    void SetAttachSocketName(FName InSocketName) { AttachSocketName = InSocketName; }
+    void UpdateAttachment();
+private:
+    FName AttachSocketName = NAME_None;
+
 public:
     void SetRelativeLocation(const FVector& InLocation) { RelativeLocation = InLocation; }
     void SetRelativeRotation(const FRotator& InRotation);
