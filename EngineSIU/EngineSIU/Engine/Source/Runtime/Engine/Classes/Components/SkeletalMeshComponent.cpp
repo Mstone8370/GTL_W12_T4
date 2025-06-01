@@ -540,6 +540,14 @@ void USkeletalMeshComponent::PlayAnimation(UAnimationAsset* NewAnimToPlay, bool 
     Play(bLooping);
 }
 
+void USkeletalMeshComponent::PlayAnimation(UAnimSequence* NewAnimSequence, float BlendTime, bool bLooping)
+{
+    if (ULuaScriptAnimInstance* Instance = Cast<ULuaScriptAnimInstance>(AnimScriptInstance))
+    {
+        Instance->SetAnimation(NewAnimSequence, BlendTime, bLooping);
+    }
+}
+
 int USkeletalMeshComponent::CheckRayIntersection(const FVector& InRayOrigin, const FVector& InRayDirection, float& OutHitDistance) const
 {
     if (!AABB.Intersect(InRayOrigin, InRayDirection, OutHitDistance))
