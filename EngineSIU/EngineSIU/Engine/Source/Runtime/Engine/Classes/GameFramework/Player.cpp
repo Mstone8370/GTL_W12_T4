@@ -13,8 +13,7 @@ UObject* APlayer::Duplicate(UObject* InOuter)
     ThisClass* NewActor = Cast<ThisClass>(Super::Duplicate(InOuter));
 
     NewActor->Socket = Socket;
-    NewActor->CameraComponent = NewActor->GetComponentByClass<UCameraComponent>();
-    NewActor->CameraComponent->SetupAttachment(NewActor->RootComponent);
+    NewActor->CameraComponent = Cast<UCameraComponent>(CameraComponent->Duplicate(NewActor));
     NewActor->CameraComponent->SetRelativeLocation(FVector(2,0,0));
     
     return NewActor;
@@ -23,8 +22,6 @@ UObject* APlayer::Duplicate(UObject* InOuter)
 void APlayer::PostSpawnInitialize()
 {
     Super::PostSpawnInitialize();
-    
-    RootComponent = AddComponent<USceneComponent>();
 
     CameraComponent = AddComponent<UCameraComponent>();
     CameraComponent->SetupAttachment(RootComponent);

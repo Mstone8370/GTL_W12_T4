@@ -25,7 +25,7 @@ void UCameraComponent::InitializeComponent()
 
 void UCameraComponent::TickComponent(float DeltaTime)
 {
-    USceneComponent::TickComponent(DeltaTime);
+    // USceneComponent::TickComponent(DeltaTime);
     /*
     if (bFollowCustomTarget) {
         //
