@@ -18,7 +18,7 @@ public:
     virtual void Destroyed() override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-    UObject* Duplicate(UObject* InOuter) override;
+    virtual UObject* Duplicate(UObject* InOuter) override;
 
     /** Pawn을 Controller에 의해 점유(Possess)될 때 호출 */
     virtual void PossessedBy(AController* NewController);

@@ -1,6 +1,7 @@
 ﻿#include "Character.h"
 
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/CapsuleComponent.h"
 
 UObject* ACharacter::Duplicate(UObject* InOuter)
 {
@@ -11,7 +12,7 @@ UObject* ACharacter::Duplicate(UObject* InOuter)
 
 void ACharacter::PostSpawnInitialize()
 {
-    APawn::PostSpawnInitialize();
+    Super::PostSpawnInitialize();
 
     RootComponent = AddComponent<USceneComponent>();
 
@@ -20,4 +21,14 @@ void ACharacter::PostSpawnInitialize()
         SkeletalMeshComponent = AddComponent<USkeletalMeshComponent>("SkeletalMeshComponent");
     }
 
+    if (!CapsuleComponent)
+    {
+        CapsuleComponent = AddComponent<UCapsuleComponent>("CapsuleComponent");
+    }
+
+}
+
+void ACharacter::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
 }
