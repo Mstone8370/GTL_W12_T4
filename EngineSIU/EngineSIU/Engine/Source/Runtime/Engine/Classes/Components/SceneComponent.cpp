@@ -34,6 +34,7 @@ void USceneComponent::GetProperties(TMap<FString, FString>& OutProperties) const
     OutProperties.Add(TEXT("RelativeLocation"), *RelativeLocation.ToString());
     OutProperties.Add(TEXT("RelativeRotation"), *RelativeRotation.ToString());
     OutProperties.Add(TEXT("RelativeScale3D"), *RelativeScale3D.ToString());
+    OutProperties.Add(TEXT("AttachSocketName"), *AttachSocketName.ToString());
 
     USceneComponent* ParentComp = GetAttachParent();
     if (ParentComp != nullptr)
@@ -63,6 +64,11 @@ void USceneComponent::SetProperties(const TMap<FString, FString>& InProperties)
     if (TempStr)
     {
         RelativeScale3D.InitFromString(*TempStr);
+    }
+    TempStr = InProperties.Find(TEXT("AttachSocketName"));
+    if (TempStr)
+    {
+        AttachSocketName = FName(*TempStr);
     }
 }
 

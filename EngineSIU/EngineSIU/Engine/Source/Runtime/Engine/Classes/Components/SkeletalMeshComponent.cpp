@@ -17,6 +17,7 @@
 #include "UObject/ObjectFactory.h"
 #include "PhysicsEngine/ConstraintInstance.h"
 #include <Engine/Contents/AnimInstance/LuaScriptAnimInstance.h>
+#include "Container/StringUtils.h"
 #include "Particles/ParticleSystemComponent.h"
 
 bool USkeletalMeshComponent::bIsCPUSkinning = false;
@@ -126,6 +127,35 @@ void USkeletalMeshComponent::SetProperties(const TMap<FString, FString>& InPrope
             SetLoopEndFrame(FString::ToFloat(InProperties["LoopEndFrame"]));
         }
     }
+    if (InProperties.Contains("SocketNames"))
+    {
+        TArray<FString> SocketNames;
+        FString SocketListStr = InProperties["SocketNames"];
+        FStringUtils::ParseIntoArray(SocketListStr, SocketNames, ',', true);
+
+        for (const FString& SocketNameStr : SocketNames)
+        {
+            FName SocketName = FName(*SocketNameStr);
+            FString Prefix = FString::Printf(TEXT("Socket_%s_"), *SocketNameStr);
+
+            // 키가 없으면 기본값 처리
+            FString BoneNameStr = InProperties.Contains(Prefix + "BoneName") ? InProperties[Prefix + "BoneName"] : TEXT("");
+            FName BoneName = FName(*BoneNameStr);
+
+            FString LocationStr = InProperties.Contains(Prefix + "Location") ? InProperties[Prefix + "Location"] : TEXT("0,0,0");
+            FString RotationStr = InProperties.Contains(Prefix + "Rotation") ? InProperties[Prefix + "Rotation"] : TEXT("0,0,0");
+            FString ScaleStr = InProperties.Contains(Prefix + "Scale") ? InProperties[Prefix + "Scale"] : TEXT("1,1,1");
+
+            FVector Location, Scale;
+            FRotator Rotation;
+            Location.InitFromString(LocationStr);
+            Rotation.InitFromString(RotationStr);
+            Scale.InitFromString(ScaleStr);
+
+            FTransform LocalTransform(Rotation, Location, Scale);
+            AddSocket(SocketName, BoneName, LocalTransform);
+        }
+    }
 }
 
 void USkeletalMeshComponent::GetProperties(TMap<FString, FString>& OutProperties) const
@@ -159,33 +189,31 @@ void USkeletalMeshComponent::GetProperties(TMap<FString, FString>& OutProperties
         OutProperties.Add(TEXT("LoopStartFrame"), std::to_string(GetLoopStartFrame()));
         OutProperties.Add(TEXT("LoopEndFrame"), std::to_string(GetLoopEndFrame()));
     }
-}
+    
+    FString SocketListStr;
+    for (const auto& Pair : SocketMap)
+    {
+        if (!SocketListStr.IsEmpty())
+        {
+            SocketListStr += ",";
+        }
+        SocketListStr += Pair.Key.ToString();
 
-#include "World/World.h"
+        FString Prefix = FString::Printf(TEXT("Socket_%s_"), *Pair.Key.ToString());
+        OutProperties.Add(Prefix + "BoneName", Pair.Value.BoneName.ToString());
+        OutProperties.Add(Prefix + "Location", Pair.Value.LocalTransform.GetTranslation().ToString());
+        OutProperties.Add(Prefix + "Rotation", Pair.Value.LocalTransform.GetRotation().Rotator().ToString());
+        OutProperties.Add(Prefix + "Scale", Pair.Value.LocalTransform.GetScale3D().ToString());
+    }
+    OutProperties.Add(TEXT("SocketNames"), SocketListStr);
+}
 
 void USkeletalMeshComponent::TickComponent(float DeltaTime)
 {
     Super::TickComponent(DeltaTime);
-    if (GetWorld()->WorldType != EWorldType::PIE) return;
     if (!bSimulate)
     {
         TickPose(DeltaTime);
-     /*   for (auto& Pair : SocketMap)
-        {
-            const FName& CurrentSocketName = Pair.Key;
-            FSocketInfo& SocketData = Pair.Value;
-
-            if (SocketData.AttachedComponent != nullptr)
-            {
-                USceneComponent* ChildComp = SocketData.AttachedComponent;
-
-                FTransform CurrentSocketWorldTM = GetSocketTransform(CurrentSocketName);
-
-                if (ChildComp->GetOwner()->IsActorBeingDestroyed())
-                    return;
-                ChildComp->SetWorldTransform(CurrentSocketWorldTM);
-            }
-        }*/
     }
 }
 
