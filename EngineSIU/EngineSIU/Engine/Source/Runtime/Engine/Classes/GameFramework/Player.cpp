@@ -10,6 +10,7 @@ UObject* APlayer::Duplicate(UObject* InOuter)
     ThisClass* NewActor = Cast<ThisClass>(Super::Duplicate(InOuter));
 
     NewActor->Socket = Socket;
+    NewActor->CameraComponent = NewActor->GetComponentByClass<UCameraComponent>();
     
     return NewActor;
 }
@@ -19,9 +20,6 @@ void APlayer::PostSpawnInitialize()
     Super::PostSpawnInitialize();
     
     RootComponent = AddComponent<USceneComponent>();
-
-    CameraComponent = AddComponent<UCameraComponent>();
-    CameraComponent->SetupAttachment(RootComponent);
 }
 
 void APlayer::Tick(float DeltaTime)
@@ -54,8 +52,8 @@ void APlayer::SetupInputComponent(UInputComponent* PlayerInputComponent)
         PlayerInputComponent->BindAction("E", [this](float DeltaTime) { MoveUp(DeltaTime); });
         PlayerInputComponent->BindAction("Q", [this](float DeltaTime) { MoveUp(-DeltaTime); });
 
-        // PlayerInputComponent->BindAxis("Turn", [this](float DeltaTime) { RotateYaw(DeltaTime); });
-        // PlayerInputComponent->BindAxis("LookUp", [this](float DeltaTime) { RotatePitch(DeltaTime); });
+        PlayerInputComponent->BindAxis("Turn", [this](float DeltaTime) { RotateYaw(DeltaTime); });
+        PlayerInputComponent->BindAxis("LookUp", [this](float DeltaTime) { RotatePitch(DeltaTime); });
 
         PlayerInputComponent->BindControllerButton(XINPUT_GAMEPAD_A, [this](float DeltaTime) { MoveUp(DeltaTime); });
         PlayerInputComponent->BindControllerButton(XINPUT_GAMEPAD_B, [this](float DeltaTime) { MoveUp(-DeltaTime); });
@@ -63,8 +61,8 @@ void APlayer::SetupInputComponent(UInputComponent* PlayerInputComponent)
         PlayerInputComponent->BindControllerAnalog(EXboxAnalog::Type::LeftStickY, [this](float DeltaTime) { MoveForward(DeltaTime); });
         PlayerInputComponent->BindControllerAnalog(EXboxAnalog::Type::LeftStickX, [this](float DeltaTime) { MoveRight(DeltaTime); });
 
-        PlayerInputComponent->BindControllerAnalog(EXboxAnalog::Type::RightStickX, [this](float DeltaTime) { RotateYaw(DeltaTime * 1000); });
-        PlayerInputComponent->BindControllerAnalog(EXboxAnalog::Type::RightStickY, [this](float DeltaTime) { RotatePitch(-DeltaTime * 1000); });
+        PlayerInputComponent->BindControllerAnalog(EXboxAnalog::Type::RightStickX, [this](float DeltaTime) { RotateYaw(DeltaTime); });
+        PlayerInputComponent->BindControllerAnalog(EXboxAnalog::Type::RightStickY, [this](float DeltaTime) { RotatePitch(DeltaTime); });
 
         PlayerInputComponent->BindControllerConnected(PlayerIndex, [this](int Index){ PlayerConnected(Index); });
         PlayerInputComponent->BindControllerDisconnected(PlayerIndex, [this](int Index){ PlayerDisconnected(Index); });
@@ -96,11 +94,14 @@ void APlayer::RotateYaw(float DeltaTime)
     SetActorRotation(NewRotation);
 }
 
-void APlayer::RotatePitch(float DeltaTime)
+void APlayer::RotatePitch(float DeltaTime) const
 {
-    FRotator NewRotation = GetActorRotation();
-    NewRotation.Pitch = FMath::Clamp(NewRotation.Pitch - DeltaTime*RotationSpeed, -89.0f, 89.0f);
-    SetActorRotation(NewRotation);
+    if (CameraComponent)
+    {
+        FRotator NewRotation = CameraComponent->GetRelativeRotation();
+        NewRotation.Pitch = FMath::Clamp(NewRotation.Pitch + DeltaTime * RotationSpeed, -89.0f, 89.0f);
+        CameraComponent->SetRelativeRotation(NewRotation);
+    }
 }
 
 void APlayer::PlayerConnected(int TargetIndex) const

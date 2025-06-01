@@ -35,23 +35,28 @@ void UCameraComponent::TickComponent(float DeltaTime)
         FollowMainPlayer();
     }
     
-    ProceedFInterp(DeltaTime);
     */
+    // ProceedFInterp(DeltaTime);
 }
 
 void UCameraComponent::FollowPlayer(int PlayerIndex)
 {
+    if (!GEngine->ActiveWorld->GetPlayer(PlayerIndex))
+    {
+        return;
+    }
+    
     FVector PlayerLocation = GEngine->ActiveWorld->GetPlayer(PlayerIndex)->GetActorLocation();
-    
-    FVector PlayerBackward = -GEngine->ActiveWorld->GetPlayer(PlayerIndex)->GetActorForwardVector();
 
-    FVector CameraOffset = PlayerBackward * DistanceBehind + FVector(0, 0, CameraHeight);
+    FVector ActorForward = -GEngine->ActiveWorld->GetPlayer(PlayerIndex)->GetActorForwardVector();
+    FVector CameraOffset = RelativeRotation.RotateVector(ActorForward) * DistanceBehind + FVector(0, 0, CameraHeight);
     
-    FVector MoveToLocation = FVector(PlayerLocation.X, PlayerLocation.Y, CameraZ) + CameraOffset;
-    
-    SetLocationWithFInterpTo(MoveToLocation);
+    FVector MoveToLocation = PlayerLocation + CameraOffset;
 
-    SetLookTarget(PlayerLocation);
+    SetWorldLocation(MoveToLocation);
+    // SetLocationWithFInterpTo(MoveToLocation);
+    //
+    // SetLookTarget(PlayerLocation);
 }
 
 void UCameraComponent::ProceedFInterp(float DeltaTime)
