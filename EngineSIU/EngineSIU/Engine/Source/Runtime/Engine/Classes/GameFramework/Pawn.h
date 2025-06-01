@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Actor.h"
 
 //TODO: Controller 부착 필요, 아직 Pawn은 쓰지 말 것
@@ -44,6 +44,8 @@ public:
     virtual void DisableInput(APlayerController* PlayerController);
 
     AController* GetController() const { return Controller; }
+
+    virtual void RegisterLuaType(sol::state& Lua) override;
 
 protected:
     UInputComponent* InputComponent;

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Pawn.h"
 
@@ -24,12 +24,13 @@ protected:
     USkeletalMeshComponent* SkeletalMeshComponent = nullptr;
     UCapsuleComponent* CapsuleComponent = nullptr;
 
-protected:
-    bool bIsFalling = false; // 
-    bool bIsJumping = false; // 점프 중일 때. 
-    bool bIsAttacking = false;
-    
-    bool bIsCrouching = false; // 앉기가 필요하면 사용.
-    bool bIsSprinting = false; // 달리기 필요하면 사용.
+public:
+    virtual void RegisterLuaType(sol::state& Lua) override; // Lua에 클래스 등록해주는 함수.
+    virtual bool BindSelfLuaProperties() override; // LuaEnv에서 사용할 멤버 변수 등록 함수.
+
+public:
+    // bool IsFalling() const;
+    // bool IsJumping();
+    // bool IsAttacking();
 
 };
