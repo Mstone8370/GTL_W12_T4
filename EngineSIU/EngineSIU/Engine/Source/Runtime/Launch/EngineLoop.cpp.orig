@@ -170,8 +170,6 @@ void FEngineLoop::Tick()
 
         const float DeltaTime = static_cast<float>(ElapsedTime / 1000.f);
 
-        GEngineLoop.AppMessageHandler->UpdateXboxControllers(DeltaTime);
-
         GEngine->Tick(DeltaTime);
         LevelEditor->Tick(DeltaTime);
         Render();
@@ -190,10 +188,13 @@ void FEngineLoop::Tick()
         {
             GPUTimingManager.EndFrame();        // End GPU frame timing
         }
+<<<<<<< HEAD
         FSoundManager::GetInstance().Update();
+=======
 
         FLuaScriptManager::Get().HotReloadLuaScript();
 
+>>>>>>> origin/Refactor/Lua
         GraphicDevice.SwapBuffer();
         do
         {
