@@ -13,3 +13,6 @@ map_Kd Flame.png
 
 newmtl T_Fire
 map_Kd T_Fire.png
+
+newmtl T_Fire_SubUV
+map_Kd T_Fire_SubUV.png
