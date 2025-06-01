@@ -888,6 +888,11 @@ void USkeletalMeshComponent::AddSocket(const FName& InSocketName, const FName& I
     }
 }
 
+TMap<FName, FSocketInfo> USkeletalMeshComponent::GetSockets()
+{
+    return SocketMap;
+}
+
 void USkeletalMeshComponent::RemoveSocket(const FName& InSocketName)
 {
     SocketMap.Remove(InSocketName);

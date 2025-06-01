@@ -64,8 +64,9 @@ private:
     
     /* Static Mesh Settings */
     void RenderForStaticMesh(UStaticMeshComponent* StaticMeshComp) const;
-    void RenderForSkeletalMesh(USkeletalMeshComponent* SkeletalMeshComp) const;
-    void AddSocketToSkeletalMeshAsset(USkeletalMeshComponent* SkeletalMeshComp, const FName& NewSocketName, const FName& ParentBoneName, const FTransform& RelativeTransform);
+    void RenderForSkeletalMesh(USkeletalMeshComponent* SkeletalMeshComp);
+    void RenderAddSocket(USkeletalMeshComponent* SkeletalMeshComp);
+    void RenderParentBoneSelectionCombo(USkeletalMeshComponent* SkeletalMeshComp, FString& BoneName);
 
     void RenderForPhysicsAsset(const USkeletalMeshComponent* SkeletalMeshComp) const;
     void RenderForParticleSystem(UParticleSystemComponent* ParticleSystemComponent) const;
@@ -106,6 +107,8 @@ private:
 
     const FString TemplateFilePath = FString("LuaScripts/template.lua");
 private:
+    TMap<FName, FSocketInfo> SocketMap;
+
     FName CurrentSocketName;
     // (3) 새로운 소켓 이름 입력 버퍼 (ImGui InputText 용)
     char NewSocketNameBuffer[128];

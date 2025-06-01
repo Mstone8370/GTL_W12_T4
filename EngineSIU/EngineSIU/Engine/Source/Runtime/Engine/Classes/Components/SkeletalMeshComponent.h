@@ -165,6 +165,7 @@ private:
     TMap<FName, FSocketInfo> SocketMap;
 public:
     void AddSocket(const FName& InSocketName, const FName& InBoneName, const FTransform& InLocalTransform);
+    TMap<FName, FSocketInfo> GetSockets();
     void RemoveSocket(const FName& InSocketName);
     const FSocketInfo* GetSocketInfo(const FName& InSocketName) const;
 public:

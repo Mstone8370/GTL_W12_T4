@@ -156,6 +156,7 @@ void PropertyEditorPanel::Render()
     {
         RenderForSkeletalMesh(SkeletalMeshComponent);
         RenderForPhysicsAsset(SkeletalMeshComponent);
+        RenderAddSocket(SkeletalMeshComponent);
     }
     if (UHeightFogComponent* FogComponent = GetTargetComponent<UHeightFogComponent>(SelectedActor, SelectedComponent))
     {
@@ -323,19 +324,40 @@ void PropertyEditorPanel::RenderForSceneComponent(USceneComponent* SceneComponen
     }
 
 
-    if (ImGui::TreeNodeEx("Attach", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+    if (ImGui::TreeNodeEx("Socket Attach", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
     {
         static char SocketNameBuffer[64] = "";
 
-        // SceneComponent의 현재 AttachSocketName → 문자열 변환 (한 번만)
+        // 초기값: SceneComponent에서 AttachSocketName 가져와서 SocketNameBuffer 초기화
+        if (SocketNameBuffer[0] == '\0')
         {
-/*            FName AttachSocketName = SceneComponent->GetAttachSocketName();
-            FString SocketNameStr = AttachSocketName.ToString();
-            FCStringAnsi::Strncpy(SocketNameBuffer, GetData(SocketNameStr), sizeof(SocketNameBuffer));
-        */}
+            FName AttachSocketName = SceneComponent->GetAttachSocketName();
+            FString AttachSocketStr = AttachSocketName.ToString();
+            FCStringAnsi::Strncpy(SocketNameBuffer, GetData(AttachSocketStr), sizeof(SocketNameBuffer));
+        }
+        ImGui::Text("Current Socket: %s", GetData(SceneComponent->GetAttachSocketName().ToString()));
 
-        // ImGui 입력
-        ImGui::InputText("SocketName", SocketNameBuffer, sizeof(SocketNameBuffer));
+        if (ImGui::BeginCombo("##AddSocket", SocketNameBuffer, ImGuiComboFlags_None))
+        {
+            for (const auto& Pair : SocketMap)
+            {
+                const FString& SocketNameStr = Pair.Key.ToString();
+                bool bIsSelected = (FString(SocketNameBuffer) == SocketNameStr);
+
+                if (ImGui::Selectable(*SocketNameStr, bIsSelected))
+                {
+                    // 선택 시 버퍼에 이름 복사
+                    FCStringAnsi::Strncpy(SocketNameBuffer, GetData(SocketNameStr), sizeof(SocketNameBuffer));
+                }
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("Bone: %s", GetData(Pair.Value.BoneName.ToString()));
+                    ImGui::EndTooltip();
+                }
+            }
+            ImGui::EndCombo();
+        }
 
         // Attach 버튼
         if (ImGui::Button("Attach", ImVec2(ImGui::GetWindowContentRegionMax().x * 0.5f, 28)))
@@ -356,6 +378,7 @@ void PropertyEditorPanel::RenderForCameraComponent(UCameraComponent* InCameraCom
 
 void PropertyEditorPanel::RenderForActor(AActor* SelectedActor, USceneComponent* TargetComponent) const
 {
+    ImGui::Separator();
     if (ImGui::Button("Duplicate"))
     {
         UEditorEngine* Engine = Cast<UEditorEngine>(GEngine);
@@ -445,82 +468,11 @@ void PropertyEditorPanel::RenderForStaticMesh(UStaticMeshComponent* StaticMeshCo
     ImGui::PopStyleColor();
 }
 
-void PropertyEditorPanel::RenderForSkeletalMesh(USkeletalMeshComponent* SkeletalMeshComp) const
+void PropertyEditorPanel::RenderForSkeletalMesh(USkeletalMeshComponent* SkeletalMeshComp)
 {
     ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
     if (ImGui::TreeNodeEx("Skeletal Mesh", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen)) // 트리 노드 생성
     {
-        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
-        if (ImGui::TreeNodeEx("Sockets", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
-        {
-            // 1. 소켓 이름 입력
-            static char NewSocketNameBuf[128] = "";
-            ImGui::Text("Socket Name:");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(200.0f);
-            ImGui::InputText("##SocketName", NewSocketNameBuf, IM_ARRAYSIZE(NewSocketNameBuf));
-
-            // 3. 부모 본 이름 입력
-            static char ParentBoneNameBuf[128] = "";
-            ImGui::Text("Parent Bone:");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(200.0f);
-            ImGui::InputText("##ParentBoneName", ParentBoneNameBuf, IM_ARRAYSIZE(ParentBoneNameBuf));
-
-            // 4. 상대 트랜스폼(위치/회전/스케일) 입력
-            static float RelLoc[3] = { 0.0f, 0.0f, 0.0f };
-            static float RelRot[3] = { 0.0f, 0.0f, 0.0f }; // Euler(Pitch, Yaw, Roll)
-            static float RelScale[3] = { 1.0f, 1.0f, 1.0f };
-
-            ImGui::Separator();
-            ImGui::Text("Relative Location:");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(150.0f);
-            ImGui::DragFloat3("##RelLoc", RelLoc, 0.1f);
-
-            ImGui::Text("Relative Rotation (Deg):");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(150.0f);
-            ImGui::DragFloat3("##RelRot", RelRot, 1.0f);
-
-            ImGui::Text("Relative Scale:");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(150.0f);
-            ImGui::DragFloat3("##RelScale", RelScale, 0.1f);
-
-            ImGui::Separator();
-
-            // 5. “Create & Attach” 버튼: 새 컴포넌트를 생성하고, 소켓에 부착
-            if (ImGui::Button("Create Socket"))
-            {
-                FName SocketFName = FName(GetData(FString(NewSocketNameBuf)));
-                FName ParentBoneFName = FName(GetData(FString(ParentBoneNameBuf)));
-                //ToDo. Skeletal bone 이름 보이도록, Socket리스트들 보이도록. 삭제 버튼 추가
-
-                // 상대 트랜스폼 생성 (FVector, FRotator, FVector)
-                FVector  Loc = FVector(RelLoc[0], RelLoc[1], RelLoc[2]);
-                FRotator Rot = FRotator(RelRot[0], RelRot[1], RelRot[2]);
-                FVector  Scale = FVector(RelScale[0], RelScale[1], RelScale[2]);
-
-                FTransform RelativeTfm(Rot, Loc, Scale);
-
-                UEditorEngine* EditorEngine = Cast<UEditorEngine>(GEngine);
-                if (EditorEngine)
-                {
-                    AActor* SelectedActor = EditorEngine->GetSelectedActor();
-                    if (SelectedActor)
-                    {
-                        SkeletalMeshComp->AddSocket(SocketFName, ParentBoneFName, RelativeTfm);
-                    }
-                }
-
-            }
-
-            ImGui::TreePop();
-        }
-
-        ImGui::PopStyleColor();
-
         ImGui::Text("SkeletalMesh");
         ImGui::SameLine();
 
@@ -753,15 +705,114 @@ void PropertyEditorPanel::RenderForSkeletalMesh(USkeletalMeshComponent* Skeletal
     ImGui::PopStyleColor();
 }
 
-void PropertyEditorPanel::AddSocketToSkeletalMeshAsset(USkeletalMeshComponent* SkeletalMeshComp, const FName& NewSocketName, const FName& ParentBoneName, const FTransform& RelativeTransform)
+void PropertyEditorPanel::RenderAddSocket(USkeletalMeshComponent* SkeletalMeshComp)
 {
-
-    if (!SkeletalMeshComp || NewSocketName.ToString().IsEmpty() || ParentBoneName.ToString().IsEmpty())
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+    if (ImGui::TreeNodeEx("Sockets", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
     {
-        return;
+        // 1. 소켓 이름 입력
+        static char NewSocketNameBuf[128] = "";
+        ImGui::Text("Socket Name:");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(200.0f);
+        ImGui::InputText("##SocketName", NewSocketNameBuf, IM_ARRAYSIZE(NewSocketNameBuf));
 
+        // 3. 부모 본 이름 입력
+        ImGui::Text("Parent Bone:");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(200.0f);
+
+        static  FString ParnetBoneName;
+        RenderParentBoneSelectionCombo(SkeletalMeshComp, ParnetBoneName);
+        
+        // 4. 상대 트랜스폼(위치/회전/스케일) 입력
+        static float RelLoc[3] = { 0.0f, 0.0f, 0.0f };
+        static float RelRot[3] = { 0.0f, 0.0f, 0.0f }; // Euler(Pitch, Yaw, Roll)
+        static float RelScale[3] = { 1.0f, 1.0f, 1.0f };
+
+        ImGui::Separator();
+        ImGui::Text("Relative Location:");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(150.0f);
+        ImGui::DragFloat3("##RelLoc", RelLoc, 0.1f);
+
+        ImGui::Text("Relative Rotation (Deg):");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(150.0f);
+        ImGui::DragFloat3("##RelRot", RelRot, 1.0f);
+
+        ImGui::Text("Relative Scale:");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(150.0f);
+        ImGui::DragFloat3("##RelScale", RelScale, 0.1f);
+
+        ImGui::Separator();
+
+        // 5. “Create & Attach” 버튼: 새 컴포넌트를 생성하고, 소켓에 부착
+        if (ImGui::Button("Create Socket"))
+        {
+            FName SocketFName = FName(GetData(FString(NewSocketNameBuf)));
+            FName ParentBoneFName = ParnetBoneName;
+            //ToDo. Skeletal bone 이름 보이도록, Socket리스트들 보이도록. 삭제 버튼 추가
+
+            // 상대 트랜스폼 생성 (FVector, FRotator, FVector)
+            FVector  Loc = FVector(RelLoc[0], RelLoc[1], RelLoc[2]);
+            FRotator Rot = FRotator(RelRot[0], RelRot[1], RelRot[2]);
+            FVector  Scale = FVector(RelScale[0], RelScale[1], RelScale[2]);
+
+            FTransform RelativeTfm(Rot, Loc, Scale);
+
+            UEditorEngine* EditorEngine = Cast<UEditorEngine>(GEngine);
+            if (EditorEngine)
+            {
+                AActor* SelectedActor = EditorEngine->GetSelectedActor();
+                if (SelectedActor)
+                {
+                    SkeletalMeshComp->AddSocket(SocketFName, ParentBoneFName, RelativeTfm);
+                }
+            }
+
+        }
+
+        ImGui::TreePop();
     }
-    SkeletalMeshComp->AddSocket(NewSocketName, ParentBoneName, RelativeTransform);
+    SocketMap = SkeletalMeshComp->GetSockets();
+
+    ImGui::PopStyleColor();
+}
+
+void PropertyEditorPanel::RenderParentBoneSelectionCombo(USkeletalMeshComponent* SkeletalMeshComp, FString& BoneName)
+{
+    USkeletalMesh* SkelMesh = SkeletalMeshComp->GetSkeletalMeshAsset();
+    if (!SkelMesh)
+    {
+        ImGui::Text("No SkeletalMesh.");
+        return;
+    }
+
+    const FReferenceSkeleton& RefSkeleton = SkelMesh->GetSkeleton()->GetReferenceSkeleton();
+
+    // ComboBox Label
+    FString CurrentLabel = BoneName.IsEmpty() ? "None" : BoneName;
+    if (ImGui::BeginCombo("##ParentBone", GetData(CurrentLabel)))
+    {
+        if (ImGui::Selectable("None", CurrentLabel == "None"))
+        {
+            BoneName = "";
+        }
+
+        for (int32 BoneIdx = 0; BoneIdx < RefSkeleton.GetRawBoneNum(); ++BoneIdx)
+        {
+            const FString& BoneNameStr = RefSkeleton.GetBoneName(BoneIdx).ToString();
+            bool bIsSelected = (BoneName == BoneNameStr);
+
+            if (ImGui::Selectable(*BoneNameStr, bIsSelected))
+            {
+                BoneName = BoneNameStr;
+            }
+        }
+        ImGui::EndCombo();
+    }
 }
 
 void PropertyEditorPanel::RenderForPhysicsAsset(const USkeletalMeshComponent* SkeletalMeshComp) const
