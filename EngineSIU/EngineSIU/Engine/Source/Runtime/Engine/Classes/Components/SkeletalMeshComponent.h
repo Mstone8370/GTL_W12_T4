@@ -63,6 +63,7 @@ public:
     void DEBUG_SetAnimationEnabled(bool bEnable);
 
     void PlayAnimation(UAnimationAsset* NewAnimToPlay, bool bLooping);
+    void PlayAnimation(UAnimSequence* NewAnimSequence, float BlendTime, bool bLooping);
 
     void SetAnimation(UAnimationAsset* NewAnimToPlay);
 

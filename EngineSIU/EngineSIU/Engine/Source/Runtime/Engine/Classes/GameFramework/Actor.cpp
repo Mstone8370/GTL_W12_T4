@@ -242,6 +242,11 @@ UActorComponent* AActor::AddComponent(UClass* InClass, FName InName, bool bTryRo
     return nullptr;
 }
 
+void AActor::AddOwnedComponent(UActorComponent* Component)
+{
+    OwnedComponents.Add(Component);
+}
+
 void AActor::RemoveOwnedComponent(UActorComponent* Component)
 {
     OwnedComponents.Remove(Component);

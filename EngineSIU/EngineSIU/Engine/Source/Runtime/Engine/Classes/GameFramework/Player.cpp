@@ -1,9 +1,12 @@
-﻿#include "Player.h"
+#include "Player.h"
 
 #include "Components/InputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "World/World.h"
+
+#include "Engine/Contents/Weapons/Weapon.h"
+#include "Engine/Contents/Weapons/WeaponComponent.h"
 
 UObject* APlayer::Duplicate(UObject* InOuter)
 {
@@ -17,11 +20,10 @@ UObject* APlayer::Duplicate(UObject* InOuter)
 void APlayer::PostSpawnInitialize()
 {
     Super::PostSpawnInitialize();
-    
-    RootComponent = AddComponent<USceneComponent>();
 
     CameraComponent = AddComponent<UCameraComponent>();
     CameraComponent->SetupAttachment(RootComponent);
+
 }
 
 void APlayer::Tick(float DeltaTime)
@@ -117,4 +119,35 @@ void APlayer::PlayerDisconnected(int TargetIndex) const
     {
         GetWorld()->DisconnectedPlayer(TargetIndex);
     }
+}
+
+void APlayer::Attack()
+{
+    if (!EquippedWeapon)
+    {
+        return;
+    }
+
+    EquippedWeapon->Attack();
+}
+
+void APlayer::EquipWeapon(UWeaponComponent* WeaponComponent)
+{
+    if (!WeaponComponent || !EquippedWeapon)
+    {
+        return;
+    }
+
+    if (EquippedWeapon)
+    {
+        // 이미 장착된 무기가 있다면 기존 무기를 제거
+        EquippedWeapon->DestroyComponent();
+        EquippedWeapon = nullptr;
+    }
+
+    EquippedWeapon = WeaponComponent;
+    EquippedWeapon->SetOwner(this);
+
+    // 무기 컴포넌트가 장착되면 애니메이션 블루프린트에 연결
+
 }
