@@ -48,7 +48,7 @@ public:
         return bLooping;
     }
 
-    void SetAnimation(UAnimSequence* NewAnim, float BlendingTime, float LoopAnim = false, bool ReverseAnim = false);
+    void SetAnimation(UAnimSequence* NewAnim, float BlendingTime, bool LoopAnim = false, bool ReverseAnim = false);
 
 private:
     float ElapsedTime;
