@@ -1,9 +1,9 @@
-﻿#pragma once
+#pragma once
 #include "Character.h"
 #include "UObject/ObjectMacros.h"
 
 class UCameraComponent;
-class USkeletalMeshComponent;
+class UWeaponComponent;
 
 class APlayer : public ACharacter
 {
@@ -28,14 +28,19 @@ private:
     void PlayerConnected(int TargetIndex) const;
     void PlayerDisconnected(int TargetIndex) const;
 
-
     FName Socket = "jx_c_camera";
     
-    USkeletalMeshComponent* SkeletalMeshComponent = nullptr;
     UCameraComponent* CameraComponent = nullptr;
 
     int PlayerIndex = -1;
     
     float MoveSpeed = 100.0f; // 이동 속도
     float RotationSpeed = 100.0f; // 회전 속도
+
+public:
+    void Attack();
+    void EquipWeapon(UWeaponComponent* WeaponComponent);
+
+private:
+    UWeaponComponent* EquippedWeapon = nullptr; // 현재 장착된 무기 컴포넌트
 };
