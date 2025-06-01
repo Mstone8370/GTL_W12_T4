@@ -44,5 +44,4 @@ public:
 private:
     UWeaponComponent* EquippedWeapon = nullptr; // 현재 장착된 무기 컴포넌트
 
-
 };
