@@ -66,6 +66,7 @@ private:
     void RenderForStaticMesh(UStaticMeshComponent* StaticMeshComp) const;
     void RenderForSkeletalMesh(USkeletalMeshComponent* SkeletalMeshComp);
     void RenderAddSocket(USkeletalMeshComponent* SkeletalMeshComp);
+    void RenderRemoveSocket(USkeletalMeshComponent* SkeletalMeshComp);
     void RenderParentBoneSelectionCombo(USkeletalMeshComponent* SkeletalMeshComp, FString& BoneName);
 
     void RenderForPhysicsAsset(const USkeletalMeshComponent* SkeletalMeshComp) const;

@@ -19,6 +19,8 @@
 #include <Engine/Contents/AnimInstance/LuaScriptAnimInstance.h>
 #include "Container/StringUtils.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "UObject/UObjectIterator.h"
+
 
 bool USkeletalMeshComponent::bIsCPUSkinning = false;
 
@@ -189,7 +191,7 @@ void USkeletalMeshComponent::GetProperties(TMap<FString, FString>& OutProperties
         OutProperties.Add(TEXT("LoopStartFrame"), std::to_string(GetLoopStartFrame()));
         OutProperties.Add(TEXT("LoopEndFrame"), std::to_string(GetLoopEndFrame()));
     }
-    
+
     FString SocketListStr;
     for (const auto& Pair : SocketMap)
     {
@@ -895,6 +897,13 @@ TMap<FName, FSocketInfo> USkeletalMeshComponent::GetSockets()
 
 void USkeletalMeshComponent::RemoveSocket(const FName& InSocketName)
 {
+    for (auto Iter : TObjectRange<USceneComponent>())
+    {
+        if (Iter->GetAttachSocketName() == InSocketName)
+        {
+            Iter->SetAttachSocketName(NAME_None);
+        }
+    }
     SocketMap.Remove(InSocketName);
 }
 

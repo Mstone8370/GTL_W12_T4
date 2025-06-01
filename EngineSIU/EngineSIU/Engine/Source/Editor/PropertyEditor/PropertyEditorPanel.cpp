@@ -157,6 +157,7 @@ void PropertyEditorPanel::Render()
         RenderForSkeletalMesh(SkeletalMeshComponent);
         RenderForPhysicsAsset(SkeletalMeshComponent);
         RenderAddSocket(SkeletalMeshComponent);
+        RenderRemoveSocket(SkeletalMeshComponent);
     }
     if (UHeightFogComponent* FogComponent = GetTargetComponent<UHeightFogComponent>(SelectedActor, SelectedComponent))
     {
@@ -365,7 +366,7 @@ void PropertyEditorPanel::RenderForSceneComponent(USceneComponent* SceneComponen
             FName NewSocketName = FName(GetData(SocketNameBuffer));
             SceneComponent->SetAttachSocketName(NewSocketName);
         }
-
+     
         ImGui::TreePop();
     }
     ImGui::PopStyleColor();
@@ -386,6 +387,7 @@ void PropertyEditorPanel::RenderForActor(AActor* SelectedActor, USceneComponent*
         Engine->SelectActor(NewActor);
         Engine->DeselectComponent(Engine->GetSelectedComponent());
     }
+    ImGui::Separator();
 
     FString BasePath = FString(L"LuaScripts\\");
 
@@ -779,6 +781,28 @@ void PropertyEditorPanel::RenderAddSocket(USkeletalMeshComponent* SkeletalMeshCo
     SocketMap = SkeletalMeshComp->GetSockets();
 
     ImGui::PopStyleColor();
+}
+
+void PropertyEditorPanel::RenderRemoveSocket(USkeletalMeshComponent* SkeletalMeshComp)
+{
+    if (ImGui::TreeNodeEx("Existing Sockets", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        for (const auto& Pair : SocketMap)
+        {
+            const FString& SocketNameStr = Pair.Key.ToString();
+            ImGui::Text("%s", GetData(SocketNameStr));
+            ImGui::SameLine();
+            FString  BtnStr = FString("Remove##") + SocketNameStr;
+            if (ImGui::Button(GetData(BtnStr)))
+            {
+                SkeletalMeshComp->RemoveSocket(Pair.Key);
+                SocketMap = SkeletalMeshComp->GetSockets();
+                break;
+            }
+        }
+        ImGui::TreePop();
+    }
+
 }
 
 void PropertyEditorPanel::RenderParentBoneSelectionCombo(USkeletalMeshComponent* SkeletalMeshComp, FString& BoneName)
